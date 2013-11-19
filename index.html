@@ -1,0 +1,356 @@
+<!doctype html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <title>numeroj</title>
+  <meta name="description" content="identify the numbers from their names in many languages">
+  <meta name="author" content="Saul Pwanson">
+
+  <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Place favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+      <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- CSS: implied media="all" -->
+  <link rel="stylesheet" href="/h5bp.css?v=2">
+  <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+  <style type="text/css">
+
+    body {
+        margin: auto;
+        width: 960px;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    #cluewords {
+        margin: auto;
+        height: 400px;
+        width: 640px;
+        border: 1px black solid;
+        background-color: #dddddd;
+    }
+
+    .clueword {
+        float: left;
+        margin-left: 40px;
+        padding-top: 10px;
+        height: 40px;
+        width: 160px;
+        font-size: 150%;
+        text-align: center;
+        color: black;
+        display:hidden;
+    }
+
+    .clueword:hover {
+        background-color: gray;
+    }
+
+    .uncovered {
+        background-color: white;
+    }
+
+    .guessed {
+        background-color: #A00000;
+        color: gray;
+    }
+
+    .numberbutton {
+          width: 120px;
+          height: 100px;
+          float: left;
+          border: 1px solid black;
+          margin: 5px;
+          font-size: 54px;
+          text-align: center;
+      }
+
+      .numberbutton:hover {
+          background-color: #00A000;
+      }
+
+    .numberpad {
+          margin: auto;
+      }
+
+    .ui-effects-transfer {
+        border: 1px dotted black;
+    }
+
+</style>
+  <script>
+        Array.prototype.Swap = function(j, k) {
+            var T = this[j]; this[j] = this[k]; this[k] = T;
+        }
+
+        function randrange(a, b)
+        {
+            return Math.floor(Math.random() * (b-a)) + a;
+        }
+
+        function shuffle(Q) {
+            for (var J=Q.length-1 ; J>0 ; J--) {
+                Q.Swap(J, randrange(0, J+1));
+            }
+        }
+
+        function range(start, count) {
+            if(arguments.length == 1) {
+                count = start;
+                start = 0;
+            }
+
+            var foo = [];
+            for (var i = 0; i < count; i++) {
+                foo.push(start + i);
+            }
+            return foo;
+        }
+
+  </script>
+</head>
+
+<body>
+    <h1>Numeroj</h1>
+
+    <h1>Score: <span id="score"></span></h1>
+    <!--h1>Points: <span id="points"></span></h1-->
+    <!--h1>Position: <span id="pos"></span></h1-->
+    <div id="cluewords">
+    </div>
+
+    <br style="clear:both;"/>
+
+    <div id="numberpad"></div>
+    <br style="clear:both;"/>
+    Delay: <span id="delayval"></span> seconds
+    <div id="delay"></div>
+
+<script>
+    var score = 0;   // total score based on how many clues have to be given
+    var points = 0;  // how much the current round is still worth
+    var timerid = null;
+    var allwords = [];
+
+    $("#score").html(score);
+    $("#delay").slider({
+        min: 100, max: 5000, step: 100, value: 700,
+        change: function( event, ui) { resetTick(); }
+    });
+
+    $(document).keydown(function(event) { makeGuess(event.which - 48); })
+
+    function makeGuess(guess) {
+        if (guess == digit) {
+//            $("#cluewords").effect("transfer", --{ to: $("#score") }, 1000);
+
+            $("#cluewords").hide("blind");
+            startRound(); 
+            $("#cluewords").show("blind");
+
+            score += points;
+            $("#score").html(score);
+        } else {
+            $("#" + guess).addClass("guessed", 1000);
+        }
+    };
+
+    function resetTick()
+    {
+        var v = $("#delay").slider("value");
+        $("#delayval").html(v/1000);
+        window.clearInterval(timerid);
+        timerid = window.setInterval(tick, v);
+    }
+
+    function tick()
+    {
+        points -= 1;
+        $("#points").html(points);
+
+        if (points == 0) {
+            window.clearInterval(timerid);
+        }
+
+        if (screenpositions.length == 0) {
+            return;
+        }
+
+        if (wordpositions.length == 0) {
+            return;
+        }
+
+        var sp = screenpositions.pop();
+        var wp = wordpositions.pop();
+
+        var cwpos = "#cw" + sp;
+//        $("#pos").html(cwpos);  // debug
+
+        w = hintwords[wp];
+        console.log(cwpos + " " + w.language + " " + w.word);
+
+        $(cwpos).html('<a title="(' + w.language + ')"><div class="covered">' + w.word + '</div></a>');
+        $(cwpos).show("highlight", {}, $("#delay").slider("value")/2);
+    }
+
+    function startRound()
+    {
+        // clear the clues for each new round
+        var numclues = 24;
+        $("#cluewords").html(' ');
+        $(".numberbutton").removeClass("guessed");
+
+        for (var i=0; i < numclues; i++) {
+            $("#cluewords").append('<div class="clueword" id="cw' + i + '"></div>');
+        }
+
+        points = numclues + allwords.length;
+        digit = randrange(0, allwords.length);
+
+        hintwords = allwords[digit];
+
+        screenpositions = range(0, numclues);
+        wordpositions = range(0, hintwords.length);
+        shuffle(screenpositions);
+        shuffle(wordpositions);
+
+        resetTick();
+    }
+
+    function WL(nspeakers, lang, wordlist, ipa) {
+        if (!wordlist) { return; }
+
+        var words = wordlist.split(" ");
+
+        if (allwords.length == 0) {
+            allwords = Array(13);
+            for (var i=0; i< allwords.length; i++) {
+                allwords[i] = [];
+            }
+        }
+
+        for (var j=0; j < words.length; j++) {
+            var w = words[j].split("-").join(" ");
+            
+            allwords[j].push({
+                'language': lang,
+                'word': w,
+                'ipa': '[IPA]',
+            })
+        }
+    }
+
+    function makeButtons(choicestr)
+    {
+        var choices = choicestr.split(" ");
+        for (var i=0; i < choices.length; i++) {
+            $("#numberpad").append('<div class="numberbutton" id="' + i + '">' + choices[i] + '</div>')
+            $("#" + i).click(function() { 
+                makeGuess($(this).attr("id"));
+            });
+        }
+    }
+
+    makeButtons("0 1 2 3 4 5 6 7 8 9 10 100 1000");
+
+    // WL(935, "mandarin")
+    WL(935, "chinese numeral", "〇 一 二 三 四 五 六 七 八 九 十 百 千");
+    WL(387, "spanish", "cero uno dos tres cuatro cinco seis siete ocho nueve diez cien mil");
+    WL(365, "english", "zero one two three four five six seven eight nine ten hundred thousand");
+    WL(295, "hindi", "शून्य एक दो तीन चार पाँच छह सात आठ नौ दस एक-सौ हजार");
+    WL(295, "hindi numerals", "० १ २ ३ ४ ५ ६ ७ ८ ९ १०");
+    WL(280, "eastern arabic", "٠ ١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ ١٠");
+    WL(204, "portuguese", "zero um dois três quatro cinco seis sete oito nove dez cem mil");
+    WL(202, "bengali (bangladesh, india)", "শুন্য এক দুই তিন চার পাঁচ ছয় সাত আট নয় দশ এক-শত হাজার", "[ʃunːo] [æk] [d̪uj] [t̪in] [t͡ʃaɹ] [pãt͡ʃ] [t͡ʃʰɔe] [ʃat̪] [aʈ] [nɔe] [d̪ɔʃ]");
+    WL(160, "russian", "ноль oднo два три четыре пять шесть семь восемь девять десять сто тысячу");
+    WL(127, "japanese", "まる ひと ふた み よん いつ む なな や ここの とお 百 千");
+    //WL(96, "punjabi (india, pakistan)")
+    WL(92, "german", "null eins zwei drei vier fünf sechs sieben acht neun zehn hundert tausend");
+    WL(82, "javanese (indonesia)", "nul siji loro telu papat lima enem pitu wolu sanga sepuluh atus ewu")
+//    WL(80, "wu (china)")
+    WL(77, "malay", "sifar satu dua tiga empat lima enam tujuh lapan sembilan sepuluh ratus ribu")
+    WL(76, "telugu (india)", "సున్న ఒక రెండు మూడు నాలుగు అయిదు ఆరు ఏడు ఎనిమిది తొమ్మిది పది వంద ఒక-వేల")
+    WL(76, "vietnamese", "hông một hai ba bốn năm sáu bảy tám nine mười trăm ngàn")
+    WL(76, "sino-korean", "영 일 이 삼 사 오 육 칠 팔 구 십");
+    WL(74, "french", "zéro un deux trois quatre cinq six sept huit neuf dix cent mille");
+    WL(73, "marathi (india)", "शून्य एक दोन तीन चार पाच सहा सात आठ नऊ एकदशांश शंभर एक-हजार")
+    WL(70, "tamil (india)", "சுழி ஒன்று இரண்டு மூன்று நான்கு ஐந்து ஆறு ஏழு எட்டு ஒன்பது பத்து நூறு ஆயிரம்")
+//    WL(66, "urdu (india, pakistan)")
+    WL(65, "persian", "صفر یک دو سه چهار پنج شش هفت هشت نه-نفر ده صد یک-هزار")
+    WL(63, "turkish", "sıfır bir iki üç dört beş altı yedi sekiz dokuz on yüz bin")
+    WL(59, "italian", "zero uno due tre quattro cinque sei sette otto nove dieci cento mille")
+    //WL(59, "cantonese")
+    WL(56, "thai", "เป็นศูนย์ หนึ่ง สอง สาม สี่ ห้า หก เจ็ด แปด เก้า สิบ หนึ่งร้อย หนึ่งพัน")
+    
+    //WL(49, "gujarati (india)")
+    //WL(48, "jin (china)")
+    //WL(47, "min nan (china)")
+    WL(40, "polish", "zero jeden dwa trzy cztery pięć sześć siedem osiem dziewięć dziesięć sto tysiąc")
+    //WL(39, "pashto (afghanistan, pakistan)")
+    //WL(38, "kannada (india)")
+    //WL(38, "xiang (china)")
+    //WL(38, "malayalam (india)")
+    //WL(38, "sundanese (indonesia)")
+    //WL(34, "hausa (nigeria)")
+    //WL(33, "oriya (india)")
+    //WL(33, "burmese (burma)")
+    //WL(31, "hakka (china)")
+    WL(30, "ukrainian", "нульової один два три чотири п'ять шість сім вісім дев'ять десять сто тисячу")
+    //WL(29, "bhojpuri (india)")
+    WL(28, "tagalog (manila)")
+    //WL(28, "yoruba (nigeria, benin, togo)")
+    //WL(27, "maithili (india)")
+    WL(26, "swahili (kenya, tanzania, uganda)", "sifuri moja mbili tatu wanne tano sita saba nane tisa kumi mia-moja elfu-moja")
+    //WL(26, "uzbek (uzbekistan)")
+    //WL(25, "sindhi (pakistan)")
+    //WL(25, "amharic (ethiopia)")
+    //WL(25, "fula (africa)")
+    WL(25, "romanian (romania, moldova)", "zero una două trei patru cinci șase șapte opt nouă zece o-sută o-mie-de")
+    //WL(25, "oromo (ethiopia, kenya)")
+    //WL(25, "igbo (nigeria)")
+    WL(25, "azerbaijani (ajerbaijan, iran)", "sıfır bir iki üç dörd beş altı yeddi səkkiz doqquz on yüz min")
+//    WL(25, "awadhi (india)")
+//    WL(25, "gan (china)")
+    //WL(25, "cebuano (phillippines)")
+    WL(21, "dutch (belgium, netherlands, suriname)", "nul een twee drie vier vijf zes zeven acht negen tien honderd duizend");
+    //WL(21, "kurdish (iraq, iran, turkey, syria)")
+    //WL(19, "serbo-croatian (serbia, croatia, bosnia, montenegro)")
+    //WL(18, "malagasy (madagascar)")
+    //WL(17, "saraiki (pakistan)")
+    //WL(17, "nepali (nepal)")
+    //WL(16, "sinhalese (sri lanka)")
+    //WL(16, "chittagonian (bangladesh)")
+    //WL(16, "zhuang (china)")
+    WL(16, "khmer (cambodia)", "សូន្យ មួយ ពីរ បី បួន ប្រាំ ប្រាំមួយ ប្រាំពីរ ប្រាំបី ប្រាំបួន ដប់ មួយរយ មួយពាន់នាក់")
+    //WL(15, "assamese (india)")
+    //WL(15, "madurese (madura, indonesia)")
+    //WL(15, "somali (somalia, ethiopia, kenya, djibouti, yemen)")
+    //WL(14, "marwari (india)")
+    //WL(14, "magahi (india)")
+    //WL(14, "haryanvi (india)")
+    WL(13, "hungarian", "nulla egy két három négy öt hat hét nyolc kilenc tíz száz ezer")
+    //WL(12, "chhattisgarhi (india)")
+    WL(12, "greek", "μηδέν ένας δύο τρεις τέσσερα πέντε έξι εφτά οχτώ εννέα δέκαεκατόν χίλια");
+
+    // ... and others ...
+    WL(5, "danish", "nul én to tre fire fem seks syv otte ni ti hundred tusind");
+    WL(1, "esperanto", "nulo unu du tri kvar kvin ses sep ok naŭ dek cent mil");
+    WL(0.3, "icelandic", "núll einn tveir þrír fjórir fimm sex sjö átta níu tíu hundrað þúsund");
+
+    startRound();
+</script>
+
+</body>
+</html>
