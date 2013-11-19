@@ -62,6 +62,9 @@
         display:hidden;
     }
 
+    a {
+        text-decoration: none;
+    }
     .clueword a, .clueword a:active, .clueword a:visited {
         color: #000000;
     }
@@ -97,9 +100,11 @@
           margin: auto;
       }
 
-    .ui-effects-transfer {
-        border: 1px dotted black;
-    }
+      li {
+          float: left;
+          width: 100px;
+          list-style-type: none; 
+      }
 
 </style>
   <script>
@@ -131,6 +136,33 @@
             return foo;
         }
 
+// Inspired by http://bit.ly/juSAWl
+// Augment String.prototype to allow for easier formatting.  This implementation 
+// doesn't completely destroy any existing String.prototype.format functions,
+// and will stringify objects/arrays.
+String.prototype.format = function(i, safe, arg) {
+ 
+  function format() {
+    var str = this, len = arguments.length+1;
+ 
+    // For each {0} {1} {n...} replace with the argument in that position.  If 
+    // the argument is an object or an array it will be stringified to JSON.
+    for (i=0; i < len; arg = arguments[i++]) {
+      safe = typeof arg === 'object' ? JSON.stringify(arg) : arg;
+      str = str.replace(RegExp('\\{'+(i-1)+'\\}', 'g'), safe);
+    }
+    return str;
+  }
+ 
+  // Save a reference of what may already exist under the property native.  
+  // Allows for doing something like: if("".format.native) { /* use native */ }
+  format.native = String.prototype.format;
+ 
+  // Replace the prototype property
+  return format;
+ 
+}();
+
   </script>
 </head>
 
@@ -145,14 +177,17 @@
     </div>
 
     <br style="clear:both;"/>
+    <ul id="languages"></ul>
+    <br style="clear:both;"/>
 
     <div id="numberpad"></div>
     <br style="clear:both;"/>
     Delay: <span id="delayval"></span> seconds
     <div id="delay"></div>
 
+
     <br style="clear:both;"/>
-    Questions, comments, suggestions?  email <strong>saul at pwanson.com</strong>.
+    Questions, comments, corrections?  email <strong>saul at pwanson.com</strong>.
 <script>
     var languages = { } // [ISO 639-2 Language Code] => Language { .language, .speakers }
 
@@ -216,9 +251,9 @@
 //        $("#pos").html(cwpos);  // debug
 
         w = hintwords[wp];
-        console.log(cwpos + " " + w.language + " " + w.word);
+        console.log(cwpos + " " + w.language.name + " " + w.word);
 
-        $(cwpos).html('<a title="(' + w.language + ')"><div lang="' + w.langcode + '">' + w.word + '</div></a>');
+        $(cwpos).html('<a href="http://en.wiktionary.org/wiki/{0}" title="({1})"><div lang="{2}">{3}</div></a>'.format(w.word, w.language.name, w.langcode, w.word));
         $(cwpos).show("highlight", {}, $("#delay").slider("value")/2);
     }
 
@@ -239,21 +274,29 @@
         hintwords = allwords[digit];
 
         screenpositions = range(0, numclues);
-        wordpositions = range(0, hintwords.length);
+        wordpositions = [ ]
+        for (var i=0; i < hintwords.length; i++) {
+            if ($("input#" + hintwords[i].langcode).attr('checked')) {
+                wordpositions.push(i)
+            }
+        }
         shuffle(screenpositions);
         shuffle(wordpositions);
 
         resetTick();
     }
 
-    function WL(langcode, nspeakers, lang, wordlist, ipa)
+    function LANG(langcode, nspeakers, langname)
     {
         languages[langcode] = {
-            language: lang,
+            name: langname,
             speakers: nspeakers, // .speakers in millions
-            
-        }
+//            geography: "",
+        };
+    }
 
+    function WL(langcode, wordlist, ipa)
+    {
         if (!wordlist) { return; }
 
         var words = wordlist.split(" ");
@@ -270,7 +313,7 @@
             
             allwords[j].push({
                 'langcode': langcode,
-                'language': lang,
+                'language': languages[langcode],
                 'word': w,
                 'ipa': '[IPA]',
             })
@@ -279,7 +322,9 @@
 
     function makeLanguageList()
     {
-
+        for (var langcode in languages) {
+            $("#languages").append('<li><input id="{0}" type="checkbox" checked="true"/><a title="{2}m speakers" href="http://en.wikipedia.org/wiki/ISO_639:{0}">&nbsp;{1}</a></li>'.format(langcode, languages[langcode].name, languages[langcode].speakers))
+        }
     }
 
     function makeButtons(choicestr)
@@ -295,89 +340,112 @@
 
     makeButtons("0 1 2 3 4 5 6 7 8 9 10 100 1000");
 
-    // WL("zh", 935, "mandarin")
-    WL("zh", 935, "chinese numeral", "〇 一 二 三 四 五 六 七 八 九 十 百 千");
-    WL("es", 387, "spanish", "cero uno dos tres cuatro cinco seis siete ocho nueve diez cien mil");
-    WL("en", 365, "english", "zero one two three four five six seven eight nine ten hundred thousand");
-    WL("hi", 295, "hindi", "शून्य एक दो तीन चार पाँच छह सात आठ नौ दस एक-सौ हजार");
-    WL("hin", 295, "hindi numerals", "० १ २ ३ ४ ५ ६ ७ ८ ९ १०");
-    WL("ar", 280, "arabic numerals", "٠ ١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ ١٠");
-    WL("pt", 204, "portuguese", "zero um dois três quatro cinco seis sete oito nove dez cem mil");
-    WL("bn", 202, "bengali (bangladesh, india)", "শুন্য এক দুই তিন চার পাঁচ ছয় সাত আট নয় দশ এক-শত হাজার", "[ʃunːo] [æk] [d̪uj] [t̪in] [t͡ʃaɹ] [pãt͡ʃ] [t͡ʃʰɔe] [ʃat̪] [aʈ] [nɔe] [d̪ɔʃ]");
-    WL("ru", 160, "russian", "ноль oднo два три четыре пять шесть семь восемь девять десять сто тысячу");
-    WL("ja", 127, "japanese", "まる ひと ふた み よん いつ む なな や ここの とお 百 千");
-    //WL("pa", 96, "punjabi (india, pakistan)")
-    WL("de", 92, "german", "null eins zwei drei vier fünf sechs sieben acht neun zehn hundert tausend");
-    WL("jv", 82, "javanese (indonesia)", "nul siji loro telu papat lima enem pitu wolu sanga sepuluh atus ewu")
-//    WL(80, "wu (china)")
-    WL("ms", 77, "malay", "sifar satu dua tiga empat lima enam tujuh lapan sembilan sepuluh ratus ribu")
-    WL("te", 76, "telugu (india)", "సున్న ఒక రెండు మూడు నాలుగు అయిదు ఆరు ఏడు ఎనిమిది తొమ్మిది పది వంద ఒక-వేల")
-    WL("vi", 76, "vietnamese", "hông một hai ba bốn năm sáu bảy tám nine mười trăm ngàn")
-    WL("ko", 76, "korean", "영 일 이 삼 사 오 육 칠 팔 구 십");
-    WL("fr", 74, "french", "zéro un deux trois quatre cinq six sept huit neuf dix cent mille");
-    // WL("mr", 73, "marathi (india)", "शून्य एक दोन तीन चार पाच सहा सात आठ नऊ एकदशांश शंभर एक-हजार") // too much like hindi
-    WL("ta", 70, "tamil (india)", "சுழி ஒன்று இரண்டு மூன்று நான்கு ஐந்து ஆறு ஏழு எட்டு ஒன்பது பத்து நூறு ஆயிரம்")
-//    WL("ur", 66, "urdu (india, pakistan)")
-    WL("fa", 65, "persian", "صفر یک دو سه چهار پنج شش هفت هشت نه-نفر ده صد یک-هزار")
-    WL("tr", 63, "turkish", "sıfır bir iki üç dört beş altı yedi sekiz dokuz on yüz bin")
-    WL("it", 59, "italian", "zero uno due tre quattro cinque sei sette otto nove dieci cento mille")
-    //WL("", 59, "cantonese")
-    WL("th", 56, "thai", "เป็นศูนย์ หนึ่ง สอง สาม สี่ ห้า หก เจ็ด แปด เก้า สิบ หนึ่งร้อย หนึ่งพัน")
+    LANG("es", 387, "spanish")
+    LANG("en", 365, "english")
+    LANG("hi", 295, "hindi", "india")
+    LANG("hin", 295, "hindi numerals", "india")
+    LANG("ar", 280, "arabic numerals")
+    LANG("pt", 204, "portuguese")
+    LANG("bn", 202, "bengali")
+    LANG("ru", 160, "russian")
+    LANG("ja", 127, "japanese")
+    LANG("de", 92, "german")
+    LANG("ms", 77, "malay")
+    LANG("vi", 76, "vietnamese")
+    LANG("ko", 76, "korean")
+    LANG("fr", 74, "french")
+    LANG("fa", 65, "persian")
+    LANG("tr", 63, "turkish")
+    LANG("it", 59, "italian")
+    LANG("th", 56, "thai")
     
-    //WL("gu", 49, "gujarati (india)")
-    //WL("", 48, "jin (china)")
-    //WL("", 47, "min nan (china)")
-    WL("pl", 40, "polish", "zero jeden dwa trzy cztery pięć sześć siedem osiem dziewięć dziesięć sto tysiąc")
-    //WL("ps", 39, "pashto (afghanistan, pakistan)")
-    //WL("kn", 38, "kannada (india)")
-    //WL(38, "xiang (china)")
-    //WL(38, "malayalam (india)")
-    //WL(38, "sundanese (indonesia)")
-    //WL(34, "hausa (nigeria)")
-    //WL(33, "oriya (india)")
-    //WL(33, "burmese (burma)")
-    //WL(31, "hakka (china)")
-    WL("uk", 30, "ukrainian", "нульової один два три чотири п'ять шість сім вісім дев'ять десять сто тисячу")
-    //WL(29, "bhojpuri (india)")
-    WL("tl", 28, "tagalog (manila)")
-    //WL(28, "yoruba (nigeria, benin, togo)")
-    //WL(27, "maithili (india)")
-    WL("sw", 26, "swahili (kenya, tanzania, uganda)", "sifuri moja mbili tatu wanne tano sita saba nane tisa kumi mia-moja elfu-moja")
-    //WL(26, "uzbek (uzbekistan)")
-    //WL(25, "sindhi (pakistan)")
-    //WL(25, "amharic (ethiopia)")
-    //WL(25, "fula (africa)")
-    WL("ro", 25, "romanian (romania, moldova)", "zero una două trei patru cinci șase șapte opt nouă zece o-sută o-mie-de")
-    //WL(25, "oromo (ethiopia, kenya)")
-    //WL(25, "igbo (nigeria)")
-    WL("az", 25, "azerbaijani (ajerbaijan, iran)", "sıfır bir iki üç dörd beş altı yeddi səkkiz doqquz on yüz min")
-//    WL(25, "awadhi (india)")
-//    WL(25, "gan (china)")
-    //WL("ceb", 25, "cebuano (phillippines)")
-    WL("nl", 21, "dutch (belgium, netherlands, suriname)", "nul een twee drie vier vijf zes zeven acht negen tien honderd duizend");
-    //WL("ku", 21, "kurdish (iraq, iran, turkey, syria)")
-    //WL("sr", 19, "serbo-croatian (serbia, croatia, bosnia, montenegro)")
-    //WL(18, "malagasy (madagascar)")
-    //WL(17, "saraiki (pakistan)")
-    //WL("ne", 17, "nepali (nepal)")
-    //WL(16, "sinhalese (sri lanka)")
-    //WL(16, "chittagonian (bangladesh)")
-    //WL(16, "zhuang (china)")
-    WL("km", 16, "khmer (cambodia)", "សូន្យ មួយ ពីរ បី បួន ប្រាំ ប្រាំមួយ ប្រាំពីរ ប្រាំបី ប្រាំបួន ដប់ មួយរយ មួយពាន់នាក់")
-    //WL(15, "assamese (india)")
-    //WL(15, "madurese (madura, indonesia)")
-    //WL(15, "somali (somalia, ethiopia, kenya, djibouti, yemen)")
-    //WL(14, "marwari (india)")
-    //WL(14, "magahi (india)")
-    //WL(14, "haryanvi (india)")
-    WL("hu", 13, "hungarian", "nulla egy két három négy öt hat hét nyolc kilenc tíz száz ezer")
-    //WL(12, "chhattisgarhi (india)")
-    WL("gr", 12, "greek", "μηδέν ένας δύο τρεις τέσσερα πέντε έξι εφτά οχτώ εννέα δέκαεκατόν χίλια");
+    LANG("zh", 935, "chinese", "china");
+    LANG("bn", 202, "bengali", "bangladesh, india");
+    LANG("pa", 96, "punjabi", "india, pakistan");
+    LANG("jv", 82, "javanese", "indonesia");
+    LANG("te", 76, "telugu", "india");
+    LANG("mr", 73, "marathi", "india");
+    LANG("ta", 70, "tamil", "india");
+    LANG("gu", 49, "gujarati", "india")
+    LANG("", 48, "jin", "china")
+    LANG("", 47, "min nan", "china")
+    LANG("pa", 96, "punjabi")
+    LANG("wu", 80, "wu", "china")
+    LANG("ur", 66, "urdu", "india, pakistan")
+    LANG("pl", 40, "polish")
+    LANG("uk", 30, "ukrainian")
+    LANG("ps", 39, "pashto", "afghanistan, pakistan")
+    LANG("kn", 38, "kannada", "india")
+    LANG("", 38, "sundanese", "indonesia")
+    LANG("", 34, "hausa", "nigeria")
+    LANG("", 33, "burmese", "burma")
+    LANG("", 28, "yoruba", "nigeria, benin, togo")
+    LANG("", 26, "uzbek", "uzbekistan")
+    LANG("", 25, "sindhi", "pakistan")
+    LANG("", 25, "amharic", "ethiopia")
+    LANG("", 25, "fula", "africa")
+    LANG("", 25, "oromo", "ethiopia, kenya")
+    LANG("", 25, "igbo", "nigeria")
+    LANG("ceb", 25, "cebuano", "phillippines")
+    LANG("ku", 21, "kurdish", "iraq, iran, turkey, syria")
+    LANG("sr", 19, "serbo-croatian", "serbia, croatia, bosnia, montenegro")
+    LANG("", 18, "malagasy", "madagascar")
+    LANG("", 17, "saraiki", "pakistan")
+    LANG("ne", 17, "nepali", "nepal")
+    LANG("", 16, "sinhalese", "sri lanka")
+    LANG("", 16, "chittagonian", "bangladesh")
+    LANG("", 15, "madurese", "madura, indonesia")
+    LANG("", 15, "somali", "somalia, ethiopia, kenya, djibouti, yemen")
+    LANG("tl", 28, "tagalog", "manila")
+    LANG("sw", 26, "swahili", "kenya, tanzania, uganda")
+    LANG("ro", 25, "romanian", "romania, moldova")
+    LANG("az", 25, "azerbaijani", "ajerbaijan, iran")
+    LANG("nl", 21, "dutch", "belgium, netherlands, suriname")
+    LANG("km", 16, "khmer", "cambodia")
+    LANG("hu", 13, "hungarian", "hungary")
+    LANG("gr", 12, "greek")
+    LANG("da", 5, "danish")
+    LANG("eo", 1, "esperanto")
+    LANG("is", 0.3, "icelandic")
+
+    WL("zh", "〇 一 二 三 四 五 六 七 八 九 十 百 千");
+    WL("es", "cero uno dos tres cuatro cinco seis siete ocho nueve diez cien mil");
+    WL("en", "zero one two three four five six seven eight nine ten hundred thousand");
+    WL("hi", "शून्य एक दो तीन चार पाँच छह सात आठ नौ दस एक-सौ हजार");
+    WL("hin", "० १ २ ३ ४ ५ ६ ७ ८ ९ १०");
+    WL("ar", "٠ ١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ ١٠");
+    WL("pt", "zero um dois três quatro cinco seis sete oito nove dez cem mil");
+    WL("bn", "শুন্য এক দুই তিন চার পাঁচ ছয় সাত আট নয় দশ এক-শত হাজার", "[ʃunːo] [æk] [d̪uj] [t̪in] [t͡ʃaɹ] [pãt͡ʃ] [t͡ʃʰɔe] [ʃat̪] [aʈ] [nɔe] [d̪ɔʃ]");
+    WL("ru", "ноль oднo два три четыре пять шесть семь восемь девять десять сто тысячу");
+    WL("ja", "まる ひと ふた み よん いつ む なな や ここの とお 百 千");
+    WL("de", "null eins zwei drei vier fünf sechs sieben acht neun zehn hundert tausend");
+    WL("jv", "nul siji loro telu papat lima enem pitu wolu sanga sepuluh atus ewu")
+    WL("ms", "sifar satu dua tiga empat lima enam tujuh lapan sembilan sepuluh ratus ribu")
+    WL("te", "సున్న ఒక రెండు మూడు నాలుగు అయిదు ఆరు ఏడు ఎనిమిది తొమ్మిది పది వంద ఒక-వేల")
+    WL("vi", "hông một hai ba bốn năm sáu bảy tám nine mười trăm ngàn")
+    WL("ko", "영 일 이 삼 사 오 육 칠 팔 구 십");
+    WL("fr", "zéro un deux trois quatre cinq six sept huit neuf dix cent mille");
+    // WL("mr", "शून्य एक दोन तीन चार पाच सहा सात आठ नऊ एकदशांश शंभर एक-हजार") // too much like hindi
+    WL("ta", "சுழி ஒன்று இரண்டு மூன்று நான்கு ஐந்து ஆறு ஏழு எட்டு ஒன்பது பத்து நூறு ஆயிரம்")
+    WL("fa", "صفر یک دو سه چهار پنج شش هفت هشت نه-نفر ده صد یک-هزار")
+    WL("tr", "sıfır bir iki üç dört beş altı yedi sekiz dokuz on yüz bin")
+    WL("it", "zero uno due tre quattro cinque sei sette otto nove dieci cento mille")
+    WL("th", "เป็นศูนย์ หนึ่ง สอง สาม สี่ ห้า หก เจ็ด แปด เก้า สิบ หนึ่งร้อย หนึ่งพัน")
+    
+    WL("pl", "zero jeden dwa trzy cztery pięć sześć siedem osiem dziewięć dziesięć sto tysiąc")
+    WL("uk", "нульової один два три чотири п'ять шість сім вісім дев'ять десять сто тисячу")
+    WL("sw", "sifuri moja mbili tatu wanne tano sita saba nane tisa kumi mia-moja elfu-moja")
+    WL("ro", "zero una două trei patru cinci șase șapte opt nouă zece o-sută o-mie-de")
+    WL("az", "sıfır bir iki üç dörd beş altı yeddi səkkiz doqquz on yüz min")
+    WL("nl", "nul een twee drie vier vijf zes zeven acht negen tien honderd duizend");
+    WL("km", "សូន្យ មួយ ពីរ បី បួន ប្រាំ ប្រាំមួយ ប្រាំពីរ ប្រាំបី ប្រាំបួន ដប់ មួយរយ មួយពាន់នាក់")
+    WL("hu", "nulla egy két három négy öt hat hét nyolc kilenc tíz száz ezer")
+    WL("gr", "μηδέν ένας δύο τρεις τέσσερα πέντε έξι εφτά οχτώ εννέα δέκαεκατόν χίλια");
 
     // ... and others ...
-    WL("da", 5, "danish", "nul én to tre fire fem seks syv otte ni ti hundred tusind");
-    WL("eo", 1, "esperanto", "nulo unu du tri kvar kvin ses sep ok naŭ dek cent mil");
-    WL("is", 0.3, "icelandic", "núll einn tveir þrír fjórir fimm sex sjö átta níu tíu hundrað þúsund");
+    WL("da", "nul én to tre fire fem seks syv otte ni ti hundred tusind");
+    WL("eo", "nulo unu du tri kvar kvin ses sep ok naŭ dek cent mil");
+    WL("is", "núll einn tveir þrír fjórir fimm sex sjö átta níu tíu hundrað þúsund");
 
     makeLanguageList();
 
