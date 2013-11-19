@@ -34,6 +34,7 @@
         text-align: center;
     }
     h1 {
+        margin-top: 20px;
         font-size: 54px;
     }
     h2 {
@@ -100,14 +101,13 @@
           margin: auto;
       }
 
-      li {
+      #languages div {
           float: left;
           width: 200px;
-          list-style-type: none; 
       }
+  </style>
 
-</style>
-  <script>
+  <script type="text/javascript">
         Array.prototype.Swap = function(j, k) {
             var T = this[j]; this[j] = this[k]; this[k] = T;
         }
@@ -171,7 +171,7 @@ Array.prototype.extend = function (other_array) {
 </head>
 
 <body>
-    <h1><a href="http://en.wiktionary.org/wiki/numeroj" title="[esperanto] numbers">Numeroj</a></h1>
+    <h1><a href="http://en.wiktionary.org/wiki/numeroj" title="[esperanto] numbers">NUMEROJ</a></h1>
 
     <!--h2>Score: <span id="score"></span></h2-->
     <!--h1>Points: <span id="points"></span></h1-->
@@ -180,19 +180,21 @@ Array.prototype.extend = function (other_array) {
     <div id="cluewords"></div>
 
     <br style="clear:both;"/>
-    <div id="numberpad"></div>
+    <div id="numberpad">
+    </div>
+    <div class="numberbutton" id="skip">⚐</div>
 
     <br style="clear:both;"/>
     Delay: <span id="delayval"></span> seconds
     <div id="delay"></div>
 
     <br style="clear:both;"/>
-    <ul id="languages"></ul>
+    <div id="languages"></div>
 
     <br style="clear:both;"/>
     <hr/>
     Questions, comments, corrections?  email <strong>saul at pwanson.com</strong>.
-<script>
+<script type="text/javascript">
     var all_languages = { } // [ISO 639-2 Language Code] => Language { .language, .speakers }
     var languages = { }
 
@@ -201,6 +203,7 @@ Array.prototype.extend = function (other_array) {
     var timerid = null;
     var allwords = [];
 
+    $("#skip").click(startRound);
     $("#score").html(score);
     $("#delay").slider({
         min: 100, max: 5000, step: 100, value: 700,
@@ -213,12 +216,11 @@ Array.prototype.extend = function (other_array) {
         if (guess == digit) {
 //            $("#cluewords").effect("transfer", --{ to: $("#score") }, 1000);
 
-            $("#cluewords").hide("blind");
-            startRound(); 
-            $("#cluewords").show("blind");
-
             score += points;
             $("#score").html(score);
+
+            startRound(); 
+
         } else {
             $("#" + guess).addClass("guessed", 400);
         }
@@ -267,6 +269,8 @@ Array.prototype.extend = function (other_array) {
 
     function startRound()
     {
+        $("#cluewords").hide("blind");
+
         // clear the clues for each new round
         var numclues = 24;
         $("#cluewords").html(' ');
@@ -292,6 +296,8 @@ Array.prototype.extend = function (other_array) {
         shuffle(padremaining);
         shuffle(screenpositions);
         shuffle(wordpositions);
+
+        $("#cluewords").show("blind");
 
         resetTick();
     }
@@ -338,7 +344,7 @@ Array.prototype.extend = function (other_array) {
     function makeLanguageList()
     {
         for (var langcode in languages) {
-            $("#languages").append('<li><input id="{0}" type="checkbox" checked="true"/><a title="{2}m speakers" href="http://en.wikipedia.org/wiki/ISO_639:{0}">&nbsp;{1}</a></li>'.format(langcode, languages[langcode].name, languages[langcode].speakers))
+            $("#languages").append('<div id="{0}"><input id="{0}" type="checkbox" checked="true"/><a title="{2}m speakers" href="http://en.wikipedia.org/wiki/ISO_639:{0}">&nbsp;{1}</a></div>'.format(langcode, languages[langcode].name, languages[langcode].speakers))
         }
     }
 
@@ -420,6 +426,7 @@ Array.prototype.extend = function (other_array) {
     LANG("km", 16, "khmer", "cambodia")
     LANG("hu", 13, "hungarian", "hungary")
     LANG("gr", 12, "greek")
+    LANG("he", 7, "hebrew")
     LANG("da", 5, "danish")
     LANG("eo", 1, "esperanto")
     LANG("is", 0.3, "icelandic")
@@ -462,10 +469,22 @@ Array.prototype.extend = function (other_array) {
     WL("da", "nul én to tre fire fem seks syv otte ni ti hundred tusind");
     WL("eo", "nulo unu du tri kvar kvin ses sep ok naŭ dek cent mil");
     WL("is", "núll einn tveir þrír fjórir fimm sex sjö átta níu tíu hundrað þúsund");
+    WL("he", "אפס אחד שנים שלושה ארבעה חמישה שש שבעה שמונה תשעה עשרה מאה אלף");
 
     makeLanguageList();
 
     startRound();
+
+    // google analytics tracking
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-30170773-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
 </script>
 
 </body>
