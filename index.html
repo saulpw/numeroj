@@ -173,18 +173,18 @@ String.prototype.format = function(i, safe, arg) {
     <!--h2>Score: <span id="score"></span></h2-->
     <!--h1>Points: <span id="points"></span></h1-->
     <!--h1>Position: <span id="pos"></span></h1-->
-    <div id="cluewords">
-    </div>
+
+    <div id="cluewords"></div>
 
     <br style="clear:both;"/>
-    <ul id="languages"></ul>
-    <br style="clear:both;"/>
-
     <div id="numberpad"></div>
+
     <br style="clear:both;"/>
     Delay: <span id="delayval"></span> seconds
     <div id="delay"></div>
 
+    <br style="clear:both;"/>
+    <ul id="languages"></ul>
 
     <br style="clear:both;"/>
     Questions, comments, corrections?  email <strong>saul at pwanson.com</strong>.
@@ -359,7 +359,7 @@ String.prototype.format = function(i, safe, arg) {
     LANG("it", 59, "italian")
     LANG("th", 56, "thai")
     
-    LANG("zh", 935, "chinese", "china");
+    LANG("zh", 935, "chinese numerals", "china");
     LANG("bn", 202, "bengali", "bangladesh, india");
     LANG("pa", 96, "punjabi", "india, pakistan");
     LANG("jv", 82, "javanese", "indonesia");
@@ -436,7 +436,7 @@ String.prototype.format = function(i, safe, arg) {
     WL("uk", "нульової один два три чотири п'ять шість сім вісім дев'ять десять сто тисячу")
     WL("sw", "sifuri moja mbili tatu wanne tano sita saba nane tisa kumi mia-moja elfu-moja")
     WL("ro", "zero una două trei patru cinci șase șapte opt nouă zece o-sută o-mie-de")
-    WL("az", "sıfır bir iki üç dörd beş altı yeddi səkkiz doqquz on yüz min")
+//    WL("az", "sıfır bir iki üç dörd beş altı yeddi səkkiz doqquz on yüz min") // too much like turkish
     WL("nl", "nul een twee drie vier vijf zes zeven acht negen tien honderd duizend");
     WL("km", "សូន្យ មួយ ពីរ បី បួន ប្រាំ ប្រាំមួយ ប្រាំពីរ ប្រាំបី ប្រាំបួន ដប់ មួយរយ មួយពាន់នាក់")
     WL("hu", "nulla egy két három négy öt hat hét nyolc kilenc tíz száz ezer")
