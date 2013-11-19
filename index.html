@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>numeroj (beta)</title>
+  <title>numeroj</title>
   <meta name="description" content="identify the numbers from their names in many languages">
   <meta name="author" content="Saul Pwanson">
 
@@ -77,9 +77,9 @@
         background-color: white;
     }
 
-    .guessed {
-        background-color: #A00000;
-        color: gray;
+    .numberbutton.guessed, .numberbutton.guessed:hover {
+        background-color: #c66;
+        color: #c66;
     }
 
     .numberbutton {
@@ -102,7 +102,7 @@
 
       li {
           float: left;
-          width: 100px;
+          width: 200px;
           list-style-type: none; 
       }
 
@@ -160,15 +160,18 @@ String.prototype.format = function(i, safe, arg) {
  
   // Replace the prototype property
   return format;
- 
 }();
 
+Array.prototype.extend = function (other_array) {
+    /* you should include a test to check whether other_array really is an array */
+    other_array.forEach(function(v) {this.push(v)}, this);    
+    return this;
+}
   </script>
 </head>
 
 <body>
     <h1><a href="http://en.wiktionary.org/wiki/numeroj" title="[esperanto] numbers">Numeroj</a></h1>
-    <h2>(beta)</h2>
 
     <!--h2>Score: <span id="score"></span></h2-->
     <!--h1>Points: <span id="points"></span></h1-->
@@ -187,9 +190,11 @@ String.prototype.format = function(i, safe, arg) {
     <ul id="languages"></ul>
 
     <br style="clear:both;"/>
+    <hr/>
     Questions, comments, corrections?  email <strong>saul at pwanson.com</strong>.
 <script>
-    var languages = { } // [ISO 639-2 Language Code] => Language { .language, .speakers }
+    var all_languages = { } // [ISO 639-2 Language Code] => Language { .language, .speakers }
+    var languages = { }
 
     var score = 0;   // total score based on how many clues have to be given
     var points = 0;  // how much the current round is still worth
@@ -215,7 +220,7 @@ String.prototype.format = function(i, safe, arg) {
             score += points;
             $("#score").html(score);
         } else {
-            $("#" + guess).addClass("guessed", 1000);
+            $("#" + guess).addClass("guessed", 400);
         }
     };
 
@@ -232,11 +237,14 @@ String.prototype.format = function(i, safe, arg) {
         points -= 1;
         $("#points").html(points);
 
-        if (points == 0) {
-            window.clearInterval(timerid);
-        }
-
         if (screenpositions.length == 0) {
+            // start removing numbers
+            if (padremaining.length == 0) {
+                window.clearInterval(timerid);
+            } else {
+                makeGuess(padremaining.pop());
+            }
+
             return;
         }
 
@@ -273,6 +281,7 @@ String.prototype.format = function(i, safe, arg) {
 
         hintwords = allwords[digit];
 
+        padremaining = range(0, digit).extend(range(digit+1, allwords.length - digit-1));
         screenpositions = range(0, numclues);
         wordpositions = [ ]
         for (var i=0; i < hintwords.length; i++) {
@@ -280,6 +289,7 @@ String.prototype.format = function(i, safe, arg) {
                 wordpositions.push(i)
             }
         }
+        shuffle(padremaining);
         shuffle(screenpositions);
         shuffle(wordpositions);
 
@@ -288,16 +298,21 @@ String.prototype.format = function(i, safe, arg) {
 
     function LANG(langcode, nspeakers, langname)
     {
-        languages[langcode] = {
-            name: langname,
-            speakers: nspeakers, // .speakers in millions
-//            geography: "",
-        };
+        if (langcode != "") {
+            all_languages[langcode] = {
+                name: langname,
+                speakers: nspeakers, // .speakers in millions
+    //            geography: "",
+            };
+        }
     }
 
     function WL(langcode, wordlist, ipa)
     {
         if (!wordlist) { return; }
+
+        // only languages with wordlists are in the languages hash
+        languages[langcode] = all_languages[langcode];
 
         var words = wordlist.split(" ");
 
@@ -336,6 +351,7 @@ String.prototype.format = function(i, safe, arg) {
                 makeGuess($(this).attr("id"));
             });
         }
+        return choices;
     }
 
     makeButtons("0 1 2 3 4 5 6 7 8 9 10 100 1000");
