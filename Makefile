@@ -1,2 +1,7 @@
-sync:
-	s3cmd put -P index.html h5bp.css s3://www.pwanson.com/numeroj/
+
+SAULPW_WWW = ../saul.pw/wwwroot
+OUTDIR=$(SAULPW_WWW)/numeroj
+
+deploy:
+	mkdir -p $(OUTDIR)
+	cp index.html h5bp.css $(OUTDIR)
