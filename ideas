@@ -1,0 +1,29 @@
+---
+    langcode in corner of hint box
+
+    track language clues given with correct/incorrect guesses, prioritize hints for lesser-known languages
+
+
+    size of 'hint' word proportional to number of people who speak that language
+
+    how to use color..
+
+    'boss' battle after you've gotten 100 points in a language, it writes out 7 numbers and you have to press the right 7 in order.  get all 7 right, score bonus points in that language (pushing it further down the stack of clues).  maybe it shows up in a different color
+
+    
+--- 2013-Nov-21 Thursday  2:22am ---
+
+- clicking on a word swaps with that number in the pad, and goes on to the next
+  one
+  - a full set of words in a language gets a bling bling and the language
+    is crossed off (and unchecked/-able)
+  - you win with a bigger bling bling when you get all the languages
+
+- start button
+  with clear instructions, in esperanto.
+
+ 10   100  1000
+  7    8    9
+  4    5    6
+  1    2    3
+number 0    ->
