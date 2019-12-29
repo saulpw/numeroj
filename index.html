@@ -20,9 +20,9 @@
 
   <!-- CSS: implied media="all" -->
   <link rel="stylesheet" href="h5bp.css?v=2">
-  <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+  <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
   <style type="text/css">
 
     body {
@@ -136,7 +136,7 @@
             return foo;
         }
 
-// Inspired by http://bit.ly/juSAWl
+// Inspired by https://bit.ly/juSAWl
 // Augment String.prototype to allow for easier formatting.  This implementation 
 // doesn't completely destroy any existing String.prototype.format functions,
 // and will stringify objects/arrays.
@@ -171,7 +171,7 @@ Array.prototype.extend = function (other_array) {
 </head>
 
 <body>
-    <h1><a href="http://en.wiktionary.org/wiki/numeroj" title="[esperanto] numbers">NUMEROJ</a></h1>
+    <h1><a href="https://en.wiktionary.org/wiki/numeroj" title="[esperanto] numbers">NUMEROJ</a></h1>
 
     <!--h2>Score: <span id="score"></span></h2-->
     <!--h1>Points: <span id="points"></span></h1-->
@@ -263,7 +263,7 @@ Array.prototype.extend = function (other_array) {
         w = hintwords[wp];
         console.log(cwpos + " " + w.language.name + " " + w.word);
 
-        $(cwpos).html('<a href="http://en.wiktionary.org/wiki/{0}" title="({1})"><div lang="{2}">{3}</div></a>'.format(w.word, w.language.name, w.langcode, w.word));
+        $(cwpos).html('<a href="https://en.wiktionary.org/wiki/{0}" title="({1})"><div lang="{2}">{3}</div></a>'.format(w.word, w.language.name, w.langcode, w.word));
         $(cwpos).show("highlight", {}, $("#delay").slider("value")/2);
     }
 
@@ -344,7 +344,7 @@ Array.prototype.extend = function (other_array) {
     function makeLanguageList()
     {
         for (var langcode in languages) {
-            $("#languages").append('<div id="{0}"><input id="{0}" type="checkbox" checked="true"/><a title="{2}m speakers" href="http://en.wikipedia.org/wiki/ISO_639:{0}">&nbsp;{1}</a></div>'.format(langcode, languages[langcode].name, languages[langcode].speakers))
+            $("#languages").append('<div id="{0}"><input id="{0}" type="checkbox" checked="true"/><a title="{2}m speakers" href="https://en.wikipedia.org/wiki/ISO_639:{0}">&nbsp;{1}</a></div>'.format(langcode, languages[langcode].name, languages[langcode].speakers))
         }
     }
 
